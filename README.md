@@ -55,3 +55,7 @@ hexdump -C ./crash-d846cd9b76ec4a95074edcc5f439379d3fc7bb7d
 00000000  db 9b 99 da 66 6f 6f 31  32 90 6f 99              |....foo12.o.|
 0000000c
 ```
+
+This crash has found [lib.cpp](https://github.com/corytodd/workbench/blob/fe45dd7b3b3308c2ef1a2f443ba17bfc2c7c4a6f/encoding/src/lib.cpp#L11). This was found quickly because we implemented a custom mutator that creates
+a stream with a valid checksum as shown in [fuzz_encoding](https://github.com/corytodd/workbench/blob/fe45dd7b3b3308c2ef1a2f443ba17bfc2c7c4a6f/encoding/tests/fuzz_encoding.cpp#L9). Without this mutator we would
+have to wait for the fuzzer to get lucky a produce a valid checksum.
