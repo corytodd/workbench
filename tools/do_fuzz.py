@@ -5,10 +5,26 @@ import subprocess
 import sys
 import time
 from datetime import datetime
+import glob
+
+
+def do_remove_old_crashes():
+    # Use glob to find crash files
+    crash_files = glob.glob("crash-*")
+    if not crash_files:
+        return
+    print(f"Removing {len(crash_files)} old crash files...")
+    for crash_file in crash_files:
+        try:
+            os.remove(crash_file)
+        except Exception as e:
+            print(f"Warning: Could not remove {crash_file}: {e}")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run libFuzzer binary repeatedly and log output.")
+    parser = argparse.ArgumentParser(
+        description="Run libFuzzer binary repeatedly and log output."
+    )
 
     parser.add_argument(
         "fuzz_target",
@@ -43,6 +59,30 @@ def main():
         default="fuzz_log.txt",
         help="Path to a file to write all output (default: fuzz_log.txt)",
     )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        help="Suppress console output (only log to file)",
+    )
+    parser.add_argument(
+        "-d",
+        "--delay",
+        type=int,
+        default=1,
+        help="Delay in seconds between iterations (default: 1)",
+    )
+    parser.add_argument(
+        "-l",
+        "--limit",
+        type=int,
+        help="Limit the number of iterations (default: unlimited)",
+    )
+    parser.add_argument(
+        "--clean",
+        action="store_true",
+        help="Remove old crashes before starting",
+    )
 
     args = parser.parse_args()
 
@@ -51,6 +91,9 @@ def main():
         sys.exit(1)
 
     fuzz_args = [args.fuzz_target]
+
+    if args.clean:
+        do_remove_old_crashes()
 
     if not args.no_corpus:
         fuzz_args.append(args.corpus_dir)
@@ -64,15 +107,23 @@ def main():
     if args.print_full_coverage:
         fuzz_args.append("-print_full_coverage=1")
 
+    def stop_if_limited(i):
+        if args.limit is not None and i >= args.limit:
+            if not args.quiet:
+                print(f"\nReached iteration limit of {args.limit}. Stopping.")
+            return True
+        return False
+
     iteration = 0
-    with open(args.log, "a", encoding="utf-8") as log_file:
+    # Open log file in line-buffered mode to get real-time updates
+    with open(args.log, "w", encoding="utf-8", buffering=1) as log_file:
         log_file.write(f"\n=== Fuzzing started: {datetime.now().isoformat()} ===\n")
-        while True:
+        while not stop_if_limited(iteration):
             iteration += 1
             header = f"\n==== Fuzz Iteration {iteration} ({datetime.now().isoformat()}) ====\n"
-            print(header.strip())
+            if not args.quiet:
+                print(header.strip())
             log_file.write(header)
-            log_file.flush()
 
             try:
                 _ = subprocess.run(
@@ -82,15 +133,16 @@ def main():
                     text=True,
                 )
             except KeyboardInterrupt:
-                print("\nStopped by user.")
+                if not args.quiet:
+                    print("\nStopped by user.")
                 log_file.write("\n=== Fuzzing stopped by user ===\n")
                 break
             except Exception as e:
                 error_msg = f"Error running fuzzer: {e}\n"
-                print(error_msg.strip())
+                if not args.quiet:
+                    print(error_msg.strip())
                 log_file.write(error_msg)
-                log_file.flush()
-            time.sleep(1)
+            time.sleep(args.delay)
 
 
 if __name__ == "__main__":
