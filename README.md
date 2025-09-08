@@ -36,11 +36,7 @@ tail -F fuzz_log.txt | grep -oP '(SUMMARY: \S+: \S+|\./crash-.*)'
 # Run fuzz harness in another
 python3 ../../tools/do_fuzz.py ./fuzz_encoding --dict magic.dict 
 
-# Monitor log file in another
-grep -oP '(SUMMARY: \S+: \S+|\./crash-.*)' fuzz_log.txt
-
-
-# Wait for results
+# Wait for results in first terminal
 SUMMARY: AddressSanitizer: heap-buffer-overflow
 ./crash-55f1aba519b74e7e8900e1fed056f69ee6b6706d
 SUMMARY: AddressSanitizer: heap-buffer-overflow
