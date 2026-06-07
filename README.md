@@ -23,6 +23,19 @@ cmake -B build -S .
 cmake --build build
 ```
 
+### Build types
+
+In addition to the stock CMake build types, this repo defines:
+
+- `Benchmark` - optimized with debug info for profiling (`-O3 -g`)
+- `Sanitizer` - ASan + UBSan + LSan instrumented
+- `Coverage`  - gcov instrumented (`--coverage`)
+
+```
+cmake -B build -S . -DCMAKE_BUILD_TYPE=Sanitizer
+cmake --build build
+```
+
 ## Running
 
 Run the encoding example with:
