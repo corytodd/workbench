@@ -19,7 +19,7 @@ $ update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-$CLANG
 ```
 
 ```
-cmake -B build -S .
+cmake -B build -S . -DCMAKE_CXX_COMPILER=clang++
 cmake --build build
 ```
 
