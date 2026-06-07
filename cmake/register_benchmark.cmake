@@ -5,8 +5,8 @@
 # Arguments:
 # NAME        [REQUIRED] Name of the benchmark target.
 #
-# LIB         [OPTIONAL] List of libraries to link against.
-# These will be passed to target_link_libraries().
+# LIB         [OPTIONAL] List of source files for the benchmark's library.
+# These will be passed to add_library().
 #
 # INCLUDE     [OPTIONAL] List of include directories.
 # These will be passed to target_include_directories().
@@ -34,7 +34,12 @@ function(register_benchmark)
 
     # RT_<arg> holds the parsed result
     if(NOT RT_NAME)
-        message(FATAL_ERROR "register_test requires NAME parameter.")
+        message(FATAL_ERROR "register_benchmark requires NAME parameter.")
+    endif()
+
+    if(NOT ENABLE_TESTING)
+        message(STATUS "Skipping benchmark: ${RT_NAME} (ENABLE_TESTING is OFF)")
+        return()
     endif()
 
     message(STATUS "Registering test: ${RT_NAME}")

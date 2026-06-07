@@ -6,8 +6,8 @@
 # Arguments:
 # NAME         [REQUIRED] Name of the fuzzing target.
 #
-# LIB          [OPTIONAL] List of libraries to link against.
-# These will be passed to target_link_libraries().
+# LIB          [OPTIONAL] List of source files for the fuzz target's library.
+# These will be passed to add_library().
 #
 # INCLUDE      [OPTIONAL] List of include directories.
 # These will be passed to target_include_directories().
@@ -50,7 +50,12 @@ function(register_fuzz)
 
     # RT_<arg> holds the parsed result
     if(NOT RT_NAME)
-        message(FATAL_ERROR "register_test requires NAME parameter.")
+        message(FATAL_ERROR "register_fuzz requires NAME parameter.")
+    endif()
+
+    if(NOT ENABLE_FUZZING)
+        message(STATUS "Skipping fuzz target: ${RT_NAME} (ENABLE_FUZZING is OFF)")
+        return()
     endif()
 
     message(STATUS "Registering test: ${RT_NAME}")
